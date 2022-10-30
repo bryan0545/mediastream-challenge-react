@@ -14,6 +14,7 @@
 
 import "./assets/styles.css";
 import { useEffect, useState } from "react";
+import imageNotFound from "./assets/notImage.png";
 
 export default function Exercise02() {
   const [movies, setMovies] = useState([]);
@@ -120,7 +121,11 @@ export default function Exercise02() {
             {moviesFiltered.map((movie) => (
               <div key={movie.id} className="movie-library__card">
                 <div className="movie-library__card-img">
-                  <img src={movie.posterUrl} alt={movie.title} />
+                  <img
+                    src={movie.posterUrl}
+                    alt={movie.title}
+                    onError={(e) => (e.currentTarget.src = imageNotFound)}
+                  />
                 </div>
                 <ul>
                   <li className="card__title">{movie.title}</li>
