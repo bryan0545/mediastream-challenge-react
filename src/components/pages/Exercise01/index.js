@@ -12,118 +12,24 @@
  */
 
 import "./assets/styles.css";
-import { useEffect, useState } from "react";
-import { discountRules, movies } from "./data/data";
+import { useEffect } from "react";
+import { movies } from "./data/data";
+import MoviesCartList from "../../moviesCart/MoviesCartList";
+import Cart from "../../moviesCart/Cart";
+import { useCart } from "./hooks/useCart";
 
 export default function Exercise01() {
-  const [cart, setCart] = useState([]);
-  const [total, setTotal] = useState(0);
+  const { addToCart, cart, addOrRemoveMovie, total, calculateTotal } =
+    useCart();
 
   useEffect(() => {
-    const discount = calculateDiscounts();
-    const total = calculateTotal(discount);
-    setTotal(total);
-  }, [cart, discountRules]);
-
-  const calculateDiscounts = () => {
-    const discounts = discountRules.filter((discount) =>
-      discount.m.every((id) => cart.some((producto) => producto.id === id))
-    );
-
-    const totalDiscount = discounts.reduce(
-      (prev, current) => current.discount + prev,
-      0
-    );
-    return totalDiscount;
-  };
-
-  const calculateTotal = (discounts) => {
-    const subTotal = cart.reduce(
-      (prev, current) => current.price * current.quantity + prev,
-      0
-    );
-    const discount = subTotal * discounts;
-    return subTotal - discount;
-  };
-
-  const updateQuantityInCart = (quantity, movie) => {
-    const newCart = cart.map((product) => {
-      if (movie.id === product.id) {
-        product.quantity += quantity;
-      }
-      return product;
-    });
-    return newCart;
-  };
-
-  const addToCart = (newMovie) => {
-    const movieInCart = cart.find((movie) => movie.id === newMovie.id);
-
-    if (!movieInCart) {
-      return setCart([...cart, { ...newMovie, quantity: 1 }]);
-    }
-
-    const cartUpdated = updateQuantityInCart(1, newMovie);
-
-    return setCart(cartUpdated);
-  };
-
-  const addOrRemoveMovie = (value, movie) => {
-    if (value === -1) {
-      if (movie.quantity === 1) {
-        const newCart = cart.filter((product) => !(product.id === movie.id));
-        return setCart(newCart);
-      }
-    }
-
-    const cartUpdated = updateQuantityInCart(value, movie);
-
-    return setCart(cartUpdated);
-  };
+    calculateTotal();
+  }, [calculateTotal, cart]);
 
   return (
     <section className="exercise01">
-      <div className="movies__list">
-        <ul>
-          {movies.map((movie) => (
-            <li key={movie.id} className="movies__list-card">
-              <ul>
-                <li>ID: {movie.id}</li>
-                <li>Name: {movie.name}</li>
-                <li>Price: ${movie.price}</li>
-              </ul>
-              <button onClick={() => addToCart(movie)}>Add to cart</button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="movies__cart">
-        {cart.length > 0 ? (
-          <ul>
-            {cart.map((product) => (
-              <li key={product.id} className="movies__cart-card">
-                <ul>
-                  <li>ID: {product.id}</li>
-                  <li>Name: {product.name}</li>
-                  <li>Price: ${product.price}</li>
-                </ul>
-                <div className="movies__cart-card-quantity">
-                  <button onClick={() => addOrRemoveMovie(-1, product)}>
-                    -
-                  </button>
-                  <span>{product.quantity}</span>
-                  <button onClick={() => addOrRemoveMovie(1, product)}>
-                    +
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        <div className="movies__cart-total">
-          <p>Total: ${total}</p>
-        </div>
-      </div>
+      <MoviesCartList movies={movies} addToCart={addToCart} />
+      <Cart cart={cart} addOrRemoveMovie={addOrRemoveMovie} total={total} />
     </section>
   );
 }
