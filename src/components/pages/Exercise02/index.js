@@ -14,128 +14,71 @@
 
 import "./assets/styles.css";
 import { useEffect, useState } from "react";
-import imageNotFound from "./assets/notImage.png";
+import { useMovies } from "./hooks/useMovies";
+import Filter from "../../moviesComponents/Filter";
+import MoviesList from "../../moviesComponents/MoviesList";
 
 export default function Exercise02() {
-  const [movies, setMovies] = useState([]);
-  const [moviesFiltered, setMoviesFiltered] = useState([]);
-  const [movieGenres, setMovieGenres] = useState([]);
   const [fetchCount, setFetchCount] = useState(0);
-  const [loading, setLoading] = useState(false);
-  const [orderDescending, setOrderDescending] = useState(true);
 
-  const handleGenderMovieFetch = () => {
-    setLoading(true);
+  const {
+    error,
+    filteredMovies,
+    filterMovies,
+    movieGenres,
+    handleGenderMovieFetch,
+    handleMovieFetch,
+    changeOrder,
+    loading,
+    orderDescending,
+  } = useMovies();
+
+  const handleGenderMovie = async () => {
     setFetchCount(fetchCount + 1);
-    console.log("Getting genders");
-    fetch("http://localhost:3001/genres")
-      .then((res) => res.json())
-      .then((json) => {
-        setMovieGenres(json);
-        setLoading(false);
-      })
-      .catch(() => {
-        console.log("Run yarn movie-api for fake api");
-      });
+    await handleGenderMovieFetch();
   };
 
-  const handleMovieFetch = () => {
-    setLoading(true);
+  const handleMovie = () => {
     setFetchCount(fetchCount + 1);
-    console.log("Getting movies");
-    fetch("http://localhost:3001/movies?_limit=50")
-      .then((res) => res.json())
-      .then((json) => {
-        const movies = orderMovies(json, true);
-        setMovies(movies);
-        setMoviesFiltered(movies);
-        setLoading(false);
-      })
-      .catch(() => {
-        console.log("Run yarn movie-api for fake api");
-      });
-  };
-
-  useEffect(() => {
     handleMovieFetch();
+  };
+
+  useEffect(() => {
+    handleMovie();
   }, []);
 
   useEffect(() => {
-    handleGenderMovieFetch();
+    handleGenderMovie();
   }, []);
-
-  const filterMovies = (e, genre) => {
-    const selectedGenre = e.target.value;
-    const moviesList = movies.filter((movie) =>
-      movie.genres.includes(selectedGenre)
-    );
-
-    setMoviesFiltered(moviesList.length > 0 ? moviesList : movies);
-  };
-
-  const orderMovies = (movies, orderDesc) => {
-    const orderedMovies = movies.sort((a, b) => {
-      return orderDesc
-        ? Number(b.year) - Number(a.year)
-        : Number(a.year) - Number(b.year);
-    });
-    return orderedMovies;
-  };
-
-  const changeOrder = () => {
-    const moviesOrdered = orderMovies(moviesFiltered, !orderDescending);
-    setOrderDescending((prev) => !prev);
-    setMoviesFiltered(moviesOrdered);
-  };
 
   return (
     <section className="movie-library">
       <h1 className="movie-library__title">Movie Library</h1>
-      <div className="movie-library__actions">
-        <select
-          name="genre"
-          placeholder="Search by genre..."
-          disabled={loading}
-          onChange={filterMovies}
-        >
-          <option selected>All genres</option>
-          {movieGenres.map((genre) => (
-            <option key={genre} value={genre}>
-              {genre}
-            </option>
-          ))}
-        </select>
-        <button onClick={changeOrder}>{`Year ${
-          orderDescending ? "Descending" : "Ascending"
-        }`}</button>
-      </div>
-
+      {error ? (
+        <div className="movie-library__loading">
+          <p>Error lading movies</p>
+        </div>
+      ) : null}
       {loading ? (
         <div className="movie-library__loading">
           <p>Loading...</p>
           <p>Fetched {fetchCount} times</p>
         </div>
       ) : (
-        <div className="movie-library__list-container">
-          <ul className="movie-library__list">
-            {moviesFiltered.map((movie) => (
-              <div key={movie.id} className="movie-library__card">
-                <div className="movie-library__card-img">
-                  <img
-                    src={movie.posterUrl}
-                    alt={movie.title}
-                    onError={(e) => (e.currentTarget.src = imageNotFound)}
-                  />
-                </div>
-                <ul>
-                  <li className="card__title">{movie.title}</li>
-                  <li>{movie.genres.join(", ")}</li>
-                  <li>{movie.year}</li>
-                </ul>
-              </div>
-            ))}
-          </ul>
-        </div>
+        <>
+          {movieGenres.length > 0 ? (
+            <Filter
+              onChange={filterMovies}
+              changeOrder={changeOrder}
+              loading={loading}
+              genres={movieGenres}
+              orderDescending={orderDescending}
+            />
+          ) : null}
+          {filteredMovies.length > 0 ? (
+            <MoviesList movies={filteredMovies} />
+          ) : null}
+        </>
       )}
     </section>
   );

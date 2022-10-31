@@ -42,6 +42,7 @@
 .movie-library__actions {
   display: flex;
   margin-bottom: 1em;
+  width: 100%;
 }
 
 .movie-library__actions select {
@@ -94,7 +95,7 @@
 }
 
 .movie-library__card img {
-  object-fit: contain;
+  object-fit: cover;
 }
 
 .movie-library__card-img::after {
